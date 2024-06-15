@@ -1,0 +1,84 @@
+* {
+    overflow: hidden;
+    box-sizing: border-box;
+    background-color: rgb(100, 121, 128);
+}
+
+canvas {
+    background-image: url('/img/misc/blue1.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+
+}
+
+label {
+    color: wheat;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    padding: 10px;
+    height: 100%;
+    width: 100%;
+}
+
+
+.game-container {
+    padding: 10px;
+    position: relative;
+    width: 1280px;
+    height: 720px;
+    background-size: cover;
+}
+
+#enemyHealthBar,
+#playerHealthBar {
+    position: relative;
+    width: auto;
+    /* Add position relative to the parent container */
+}
+
+.health {
+    padding: 10px;
+    display: flex;
+    position: absolute;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    /* Change the width to 100% */
+    gap: 200px;
+    /* Keep or adjust the gap as needed */
+}
+
+#playerHealth {
+    height: 30px;
+    width: 300px;
+    background-color: gray;
+}
+
+
+#playerHealth2 {
+    height: 30px;
+    width: 300px;
+    background-color: red;
+}
+
+#enemyHealth {
+    height: 30px;
+    width: 300px;
+    background-color: grey;
+    position: relative;
+}
+
+#enemyHealth2 {
+    height: 30px;
+    width: 300px;
+    background-color: blue;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
