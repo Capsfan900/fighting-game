@@ -103,7 +103,8 @@ class Player extends Sprite {
     framesMax,
     offset = { x: 0, y: 0 },
     sprites,
-    attackBox = { offset: {}, width: undefined, height: undefined }
+    attackBox = { offset: {}, width: undefined, height: undefined },
+    
   }) {
     super({
       position,
@@ -127,6 +128,7 @@ class Player extends Sprite {
     this.framesElapsed = 0;
     this.framesHold = 15;
     this.sprites = sprites;
+    this.isParryKeyHeld = false;
 
     // Attack and parry box objects
     this.attackBox = {
@@ -160,7 +162,7 @@ class Player extends Sprite {
     this.draw(); // Draws hitboxes
     this.animateFrames(); // Animates sprites
     
-   // c.fillStyle = enemy.color;
+    //c.fillStyle = enemy.color;
     //c.fillRect(this.position.x, this.position.y, this.width, this.height);
 
     //updates facing direction
@@ -232,7 +234,7 @@ class Player extends Sprite {
     this.isParry = true;
     setTimeout(() => {
       this.isParry = false;
-    }, 600);
+    }, 1000);
   }
 
   dodge() {

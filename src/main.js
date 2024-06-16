@@ -18,12 +18,20 @@ const enemyHealth = document.querySelector("#enemyHealth2");
 
 
 //GAME OBJECTS//
+const backgroundlayer0 = new SpriteBackground({
+  position:{
+      x:0,
+      y:0,
+  },
+  imageSrc:'/img/misc/background1.png',
+})
+
 const backgroundlayer1 = new SpriteBackground({
     position:{
         x:0,
         y:0,
     },
-    imageSrc:'/img/misc/DownLayer.png',
+    imageSrc:'/img/misc/background2.png',
 })
 
 const backgroundLayer2 = new SpriteBackground({
@@ -31,7 +39,17 @@ const backgroundLayer2 = new SpriteBackground({
         x:0,
         y:0,
     },
-    imageSrc:'/img/misc/TopLayer.png',
+    imageSrc:'/img/misc/background3.png',
+})
+
+const clouds = new Sprite({
+     position:{
+        x:925,
+        y:600,
+    },
+    imageSrc:'/img/misc/cloud1.png',
+    scale:3.75,
+    framesMax:0
 })
 
 const campFire = new Sprite({
@@ -60,25 +78,25 @@ const player = new Player({
     imageSrc:'/img/misc/wow.png',
     //global limit to player instance framerate
     framesMax:8,
-    scale: 3,
+    scale: 2,
     //adjust sprite position
     offset:{
-        x:82,
-        y:50
+        x:85,
+        y:80
     },
 
     sprites:{
         idle:{
-            imageSrc:'/img/misc/wow.png',
-            framesMax:8
+            imageSrc:'/img/misc/idleSheetWow.png',
+            framesMax:9
         },
         run:{
-            imageSrc:'/img/misc/run.png',
-            framesMax:8
+            imageSrc:'/img/misc/rightGood.png',
+            framesMax:1
         },
         runNeg:{
-          imageSrc:'/img/misc/runNeg.png',
-            framesMax:8
+          imageSrc:'/img/misc/leftGood.png',
+            framesMax:1
         },
         roll:{
             imageSrc:'/img/misc/roll.png',
@@ -91,8 +109,8 @@ const player = new Player({
         },
 
         parry:{
-          imageSrc:'/img/misc/parrynohit.png',
-          framesMax: 10
+          imageSrc:'/img/misc/parryBlastSheetLong.png',
+          framesMax: 5
         },
 
         heavyAttack:{
@@ -215,7 +233,6 @@ function updateGameState() {
       player.switchSprite('idle');
     } 
 
-    enemy.switchSprite("idle");
   
 
     // Apply gravity to player
@@ -292,6 +309,7 @@ function animate() {
     updateGameState();
     // Update game state
     // Draw game objects
+    backgroundlayer0.update()
     backgroundlayer1.update();
     backgroundLayer2.update();
     campFire.update();
@@ -355,7 +373,10 @@ window.addEventListener("keyup", (event) => {
             keys.w.pressed = false;
             lastKey = "w";
             break;
-    }
+        case "e":
+              player.isParryKeyHeld = false; // Set the flag to false when the key is released
+            break;
+    } 
 });
 
 
