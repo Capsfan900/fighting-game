@@ -37,6 +37,7 @@ class Sprite{
       this.offset = offset
       this.originalOffsetX = offset.x;
       this.originalOffsetY = offset.y
+      this.isAnimationPaused = false; 
       
   }
 
@@ -68,18 +69,29 @@ class Sprite{
   } 
 
   animateFrames() {
-    this.framesElapsed++
-
-    if (this.framesElapsed % this.framesHold === 0) {
-      if (this.framesCurrent < this.framesMax - 1) {
-        this.framesCurrent++
-
-      } else {
-        this.framesCurrent = 0
-
+    // Check if animation is not paused
+    if (!this.isAnimationPaused) {
+      this.framesElapsed++;
+      if (this.framesElapsed % this.framesHold === 0) {
+        if (this.framesCurrent < this.framesMax - 1) {
+          this.framesCurrent++;
+        } else {
+          this.framesCurrent = 0;
+        }
       }
+    } else if(this.isAnimationPaused){
+      this.framesElapsed++;
+      if (this.framesElapsed % this.framesHold === 0) {
+        if (this.framesCurrent < this.framesMax - 1) {
+          this.framesCurrent++;
+        } else {
+          this.framesCurrent = 0;
+        }
     }
   }
+
+}
+
 
   //update method
   update() {
@@ -87,7 +99,16 @@ class Sprite{
       this.animateFrames();
 
   }
+
+  pauseAnimation() {
+    this.isAnimationPaused = true;
+  }
+
+  resumeAnimation() {
+    this.isAnimationPaused = false;
+  }
 }
+
 
 
 
@@ -232,9 +253,6 @@ class Player extends Sprite {
 
   parry() {
     this.isParry = true;
-    setTimeout(() => {
-      this.isParry = false;
-    }, 1000);
   }
 
   dodge() {
@@ -506,6 +524,46 @@ class Enemy extends Sprite {
 
    
 }
+
+
+
+
+
+class LevelAssembler{
+ constructor({
+  playerObjectList,
+  enemyObjectList,
+  levelAssetList,
+  levelTitle
+  }){
+  this.levelTitle = levelTitle
+  this.isLevelCompleted = false
+  this.score = score
+  this.specialThing = this.specialThing
+  this.playerObjectList = playerObjectList
+  this.enemyObjectList = enemyObjectList
+  this.levelAssetList = levelAssetList
+}
+
+//methods
+initBaddies(){
+//some code to somehow load all player objects in
+}
+
+initPlayer(){
+//some code
+}
+
+initAssets(){
+//some code
+}
+
+initLogic(){
+//some code
+}
+
+}
+
 
 
 

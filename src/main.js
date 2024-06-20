@@ -17,224 +17,99 @@ const playerHealth = document.querySelector("#playerHealth2");
 const enemyHealth = document.querySelector("#enemyHealth2");
 
 
-//GAME OBJECTS//
-const backgroundlayer0 = new SpriteBackground({
-  position:{
-      x:0,
-      y:0,
-  },
-  imageSrc:'/img/misc/background1.png',
-})
 
-const backgroundlayer1 = new SpriteBackground({
-    position:{
-        x:0,
-        y:0,
-    },
-    imageSrc:'/img/misc/background2.png',
-})
+//event listeners + controls
+window.addEventListener("keydown", (event) => {
+  switch (event.key) {
+      case "d":
+          keys.d.pressed = true;
+          lastKey = "d";
+          break;
+      case "a":
+          keys.a.pressed = true;
+          lastKey = "a";
+          break;
+      case " ":
+          player.velocity.y = -10;
+          break;
+      case "f":                         
+          player.attack(400);                         
+          break;                         
+      
+      case "e":
+        if (event.key === 'e') { 
+          player.resumeAnimation();
+          player.parry(); // Start or resume the animation
+        }
+          break
+      case "q":
+        player.dodge()
+        setTimeout(() => {
+          player.velocity.x += 0
+          player.position.x += 150
+        }, "400");
+          break
 
-const backgroundLayer2 = new SpriteBackground({
-    position:{
-        x:0,
-        y:0,
-    },
-    imageSrc:'/img/misc/background3.png',
-})
-
-const clouds = new Sprite({
-     position:{
-        x:925,
-        y:600,
-    },
-    imageSrc:'/img/misc/cloud1.png',
-    scale:3.75,
-    framesMax:0
-})
-
-const campFire = new Sprite({
-    position:{
-        x:925,
-        y:600,
-    },
-    imageSrc:'/img/misc/weirdFire.png',
-    scale:3.75,
-    framesMax:16
-})
+      case 'o':
+          enemy.attack(1000);
+          break
+      case 'p':
+          enemy.enemyParry()
+          break
+  }
 
 
-const player = new Player({
-    position: {
-        x: 0,
-        y: 0
-    },
-    velocity: {
-        x: 0,
-        y: 10
-    },
- // Add width and height properties
-    width:50, 
-    height: 150,
-    imageSrc:'/img/misc/wow.png',
-    //global limit to player instance framerate
-    framesMax:8,
-    scale: 2,
-    //adjust sprite position
-    offset:{
-        x:85,
-        y:80
-    },
 
-    sprites:{
-        idle:{
-            imageSrc:'/img/misc/idleSheetWow.png',
-            framesMax:9
-        },
-        run:{
-            imageSrc:'/img/misc/rightGood.png',
-            framesMax:1
-        },
-        runNeg:{
-          imageSrc:'/img/misc/leftGood.png',
-            framesMax:1
-        },
-        roll:{
-            imageSrc:'/img/misc/roll.png',
-            framesMax: 11,
-        },
-
-        attack1:{
-          imageSrc:'/img/misc/weirdAttack.png',
-          framesMax: 12
-        },
-
-        parry:{
-          imageSrc:'/img/misc/parryBlastSheetLong.png',
-          framesMax: 5
-        },
-
-        heavyAttack:{
-          imageSrc:'/img/misc/heavyAttack.png',
-          framesMax: 10
-        },
-
-    },
-    attackBox: {
-        offset: {
-          x: 0,
-          y: 0 
-        },
-        width: 160,
-        height: 50
-      }
 
 });
 
+window.addEventListener("keyup", (event) => {
+  switch (event.key) {
+      case "d":
+          keys.d.pressed = false;
+          break;
+      case "a":
+          keys.a.pressed = false;
+          break;
+      case "w":
+          keys.w.pressed = false;
+          lastKey = "w";
+          break;
+      case "e":
+          player.pauseAnimation(); // Pause the animation
+          player.isParry = false
+          break;
 
-const enemy = new Enemy({
-  position: {
-    x: 600,
-    y: 100
-  },
-  velocity: {
-      x: 0,
-      y: 0
-  },
-  offset: {
-      x:-100, // Adjust these values as needed
-      y: 0
-  },
-  color: "blue",
-  // Add width and height properties
-    width: 50, 
-    height: 150,
-    imageSrc:'/img/misc/wow.png',
-      //global limit to player instance framerate
-      framesMax:8,
-      scale: 4,
-      //adjust sprite position
-      offset:{
-          x:92,
-          y:50
-      },
+  } 
+});
 
-      sprites:{
-          idle: {
-            imageSrc: '/img/misc/eIdle.png',
-            framesMax: 8
-          }
-     
-
-      },
-      attackBox: {
-          offset: {
-            x: 0,
-           y: 0 
-          },
-          width: 160,
-          height: 50
-        }
-
-    });
 
 
 const keys = {
-    a: {
-        pressed: false
-    },
-    d: {
-        pressed: false
-    },
-    w: {
-        pressed: false
-    }
+a: {
+    pressed: false
+},
+d: {
+    pressed: false
+},
+w: {
+    pressed: false
+},
+e:  {
+   pressed: false
+}
+
 };
-//GAME OBJECTS//
-
-
-
-
-
-
-
-
 
 
 
 
 //main functions and game loop 
-function updateGameState() {
+function collisionHandling() {
     // Reset player velocity
     player.velocity.x = 0;
     enemy.velocity.x = 0;
-
-    //garbage state management that need to be refactored
-         //handle user input and sprite state//
-    if (player.isDodging) {
-      player.velocity.x = 0;
-      player.switchSprite('roll')
-    } else if(player.isAttacking){
-        player.velocity.x = 0;
-        player.switchSprite('attack1')
-    }
-    else if (keys.a.pressed && lastKey === 'a') {
-      player.velocity.x = -1;
-      player.facingRight = false; // Player is facing left
-      player.offsetRight();
-      player.switchSprite('runNeg');
-    } else if (keys.d.pressed && lastKey === 'd') {
-      player.velocity.x = 1;
-      player.facingRight = true; // Player is facing right
-      player.offsetLeft();
-      player.switchSprite('run');
-    }else if(player.isParry){
-      player.switchSprite('parry')
-    } else {
-      player.switchSprite('idle');
-    } 
-
   
-
     // Apply gravity to player
     if (player.position.y + player.height + player.velocity.y >= canvas.height - 50) {
       player.velocity.y = 0;
@@ -243,9 +118,7 @@ function updateGameState() {
     }
   
 
-    // Update enemy attack box and parry box positions
 
-  
     // Handle player and enemy collisions
     if (
       rectangularCollision({
@@ -290,12 +163,40 @@ function updateGameState() {
     }
   }
 
+function stateManagement(){
+    //garbage state management that need to be refactored
+    if (player.isDodging) {
+      player.velocity.x = 0;
+      player.switchSprite('roll')
+    } else if(player.isAttacking){
+        player.velocity.x = 0;
+        player.switchSprite('attack1')
+    }
+    else if (keys.a.pressed && lastKey === 'a') {
+      player.velocity.x = -1;
+      player.facingRight = false; // Player is facing left
+      player.offsetRight();
+      player.switchSprite('runNeg');
+    } else if (keys.d.pressed && lastKey === 'd') {
+      player.velocity.x = 1;
+      player.facingRight = true; // Player is facing right
+      player.offsetLeft();
+      player.switchSprite('run');
+    }else if(player.isParry){
+      player.switchSprite('parry')
+    } else {
+      player.switchSprite('idle');
+    } 
+
+}
+
 
 
 
 
 //ANIMATION LOOP(real time event loop)
 function animate() {
+    stateManagement()
     debug.textContent = `||Player X: ${player.position.x}
      Enemy X: ${enemy.position.x} 
      || Enemy Weapon/ParryBox Offset X: ${enemy.specialParryMoveBox.offset.x}
@@ -306,8 +207,6 @@ function animate() {
     c.clearRect(0, 0, canvas.width, canvas.height);
     c.fillStyle = 'black';
     c.fillRect(0, 0, canvas.width, canvas.height);
-    updateGameState();
-    // Update game state
     // Draw game objects
     backgroundlayer0.update()
     backgroundlayer1.update();
@@ -315,76 +214,16 @@ function animate() {
     campFire.update();
     player.update();
     enemy.update();
+
+    collisionHandling();
   }
   //recursive game loop
   animate();
 
-//event listeners + controls
-window.addEventListener("keydown", (event) => {
-    switch (event.key) {
-        case "d":
-            keys.d.pressed = true;
-            lastKey = "d";
-            break;
-        case "a":
-            keys.a.pressed = true;
-            lastKey = "a";
-            break;
-        case " ":
-            player.velocity.y = -10;
-            break;
-        case "f":                         
-            player.attack(400);                         
-            break;                         
-        
-        case "e":
-            player.parry();
-            break
-        case "q":
-          player.dodge()
-          setTimeout(() => {
-            player.velocity.x += 0
-            player.position.x += 150
-          }, "400");
-            break
 
-        case 'o':
-            enemy.attack(1000);
-            break
-        case 'p':
-            enemy.enemyParry()
-            break
-    }
-
-
-
-
-});
-
-window.addEventListener("keyup", (event) => {
-    switch (event.key) {
-        case "d":
-            keys.d.pressed = false;
-            break;
-        case "a":
-            keys.a.pressed = false;
-            break;
-        case "w":
-            keys.w.pressed = false;
-            lastKey = "w";
-            break;
-        case "e":
-              player.isParryKeyHeld = false; // Set the flag to false when the key is released
-            break;
-    } 
-});
 
 
 
   
-function assembleLevel(SpriteBackground,SpriteAssets,player,enemies){
-  //returns all objects and functions assembled for that specifc level
-}
-
 
 
