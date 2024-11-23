@@ -1,5 +1,6 @@
 
 //Level One
+
 const backgroundlayer0 = new SpriteBackground({
     position:{
         x:0,
@@ -149,7 +150,4 @@ const backgroundlayer0 = new SpriteBackground({
   
       });
   
-
-
-
-      //Level Two
+  

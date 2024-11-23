@@ -1,6 +1,3 @@
-
-
-
 //global scope things
 const canvas = document.querySelector("canvas");
 const c = canvas.getContext("2d");
@@ -76,7 +73,6 @@ window.addEventListener("keyup", (event) => {
           lastKey = "w";
           break;
       case "e":
-          player.pauseAnimation(); // Pause the animation
           player.isParry = false
           break;
 
@@ -163,40 +159,35 @@ function collisionHandling() {
     }
   }
 
-function stateManagement(){
-    //garbage state management that need to be refactored
-    if (player.isDodging) {
-      player.velocity.x = 0;
-      player.switchSprite('roll')
-    } else if(player.isAttacking){
-        player.velocity.x = 0;
-        player.switchSprite('attack1')
+  function stateManagementPlayer() {
+    if (!player.animationLocked) { // Only change states if not in locked animation
+        if (player.isDodging) {
+            player.velocity.x = 0;
+            player.switchSprite('roll');
+        } else if (player.isAttacking) {
+            player.velocity.x = 0;
+            player.switchSprite('attack1');
+        } else if (player.isParry) {
+            player.switchSprite('parry');
+        } else if (keys.a.pressed && lastKey === 'a') {
+            player.velocity.x = -1;
+            player.offsetLeft();
+            player.switchSprite('runNeg');
+        } else if (keys.d.pressed && lastKey === 'd') {
+            player.velocity.x = 1;
+            player.offsetRight();
+            player.switchSprite('run');
+        } else {
+            player.switchSprite('idle');
+        }
     }
-    else if (keys.a.pressed && lastKey === 'a') {
-      player.velocity.x = -1;
-      player.facingRight = false; // Player is facing left
-      player.offsetRight();
-      player.switchSprite('runNeg');
-    } else if (keys.d.pressed && lastKey === 'd') {
-      player.velocity.x = 1;
-      player.facingRight = true; // Player is facing right
-      player.offsetLeft();
-      player.switchSprite('run');
-    }else if(player.isParry){
-      player.switchSprite('parry')
-    } else {
-      player.switchSprite('idle');
-    } 
-
 }
-
-
 
 
 
 //ANIMATION LOOP(real time event loop)
 function animate() {
-    stateManagement()
+    stateManagementPlayer()
     debug.textContent = `||Player X: ${player.position.x}
      Enemy X: ${enemy.position.x} 
      || Enemy Weapon/ParryBox Offset X: ${enemy.specialParryMoveBox.offset.x}

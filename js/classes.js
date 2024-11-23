@@ -1,5 +1,3 @@
-
-
 class SpriteBackground {
   constructor({ position, imageSrc}) {
     this.position = position;
@@ -12,16 +10,15 @@ class SpriteBackground {
   draw() {    
   c.drawImage(this.image, this.position.x, this.position.y, 1280, 720);
   this.position.x = 0
-
-
   }
 
   update() {
-    this.draw();
+    this.draw();  
   }
 }
 
 
+///
 class Sprite{
   constructor({position,imageSrc, scale = 1, framesMax = 1 ,offset = {x:0,y:0}}) {
       this.position = position;
@@ -33,7 +30,7 @@ class Sprite{
       this.framesMax = framesMax
       this.framesCurrent = 0
       this.framesElapsed = 0
-      this.framesHold = 15
+      this.framesHold = 40
       this.offset = offset
       this.originalOffsetX = offset.x;
       this.originalOffsetY = offset.y
@@ -45,10 +42,12 @@ class Sprite{
   draw() {
       c.drawImage(
         this.image, 
+        //this code is calculating the frames for spritesheets
         //sprite animation "cropping technique for html canvas"
+        //current frame * current image width / how many frames there are
         this.framesCurrent * (this.image.width / this.framesMax),
         0,
-        this.image.width / this.framesMax, //divide by unknown
+        this.image.width / this.framesMax, 
         this.image.height,
         this.position.x - this.offset.x,
         this.position.y - this.offset.y,
@@ -59,7 +58,7 @@ class Sprite{
          // Draw attack hitbox if attacking
          if (this.isAttacking) {
           c.fillStyle = "green";
-         c.fillRect(
+          c.fillRect(
             this.attackBox.position.x +this.attackBox.offset.x, // Use attackBox offset
             this.attackBox.position.y + this.attackBox.offset.y,
             this.attackBox.width,
@@ -69,29 +68,11 @@ class Sprite{
   } 
 
   animateFrames() {
-    // Check if animation is not paused
-    if (!this.isAnimationPaused) {
-      this.framesElapsed++;
-      if (this.framesElapsed % this.framesHold === 0) {
-        if (this.framesCurrent < this.framesMax - 1) {
-          this.framesCurrent++;
-        } else {
-          this.framesCurrent = 0;
-        }
-      }
-    } else if(this.isAnimationPaused){
-      this.framesElapsed++;
-      if (this.framesElapsed % this.framesHold === 0) {
-        if (this.framesCurrent < this.framesMax - 1) {
-          this.framesCurrent++;
-        } else {
-          this.framesCurrent = 0;
-        }
+    this.framesElapsed++;
+    if (this.framesElapsed % this.framesHold === 0) {
+      this.framesCurrent = (this.framesCurrent + 1) % this.framesMax;
     }
   }
-
-}
-
 
   //update method
   update() {
@@ -109,9 +90,6 @@ class Sprite{
   }
 }
 
-
-
-
 class Player extends Sprite {
   constructor({
     width,
@@ -124,8 +102,7 @@ class Player extends Sprite {
     framesMax,
     offset = { x: 0, y: 0 },
     sprites,
-    attackBox = { offset: {}, width: undefined, height: undefined },
-    
+    attackBox = { offset: {}, width: undefined, height: undefined }
   }) {
     super({
       position,
@@ -150,8 +127,15 @@ class Player extends Sprite {
     this.framesHold = 15;
     this.sprites = sprites;
     this.isParryKeyHeld = false;
+    this.facingRight = true;
+    this.isParryAnimationComplete = false;
+    this.holdParryFrame = false;
 
-    // Attack and parry box objects
+    // Store original offset
+    this.originalOffsetX = offset.x;
+    this.originalOffsetY = offset.y;
+
+    // Attack box initialization
     this.attackBox = {
       position: {
         x: this.position.x,
@@ -160,7 +144,9 @@ class Player extends Sprite {
       offset: attackBox.offset,
       width: attackBox.width,
       height: attackBox.height
-    }
+    };
+
+    // Parry box initialization
     this.parryBox = {
       position: {
         x: this.position.x,
@@ -171,80 +157,99 @@ class Player extends Sprite {
       height: 125,
     };
 
-       // Load sprites
-       for (let sprite in sprites) {
-        sprites[sprite].image = new Image();
-        sprites[sprite].image.src = sprites[sprite].imageSrc;
-      }
-  
+    // Load sprites
+    for (const sprite in sprites) {
+      sprites[sprite].image = new Image();
+      sprites[sprite].image.src = sprites[sprite].imageSrc;
+    }
   }
 
-  update() {
-    this.draw(); // Draws hitboxes
-    this.animateFrames(); // Animates sprites
-    
-    //c.fillStyle = enemy.color;
-    //c.fillRect(this.position.x, this.position.y, this.width, this.height);
+  draw() {
+    c.drawImage(
+      this.image,
+      this.framesCurrent * (this.image.width / this.framesMax),
+      0,
+      this.image.width / this.framesMax,
+      this.image.height,
+      this.position.x - this.offset.x,
+      this.position.y - this.offset.y,
+      (this.image.width / this.framesMax) * this.scale,
+      this.image.height * this.scale
+    );
 
-    //updates facing direction
-    if (this.facingRight) {
-      player.offsetRight();
-    } else {
-      player.offsetLeft();
+    // Draw attack hitbox if attacking
+    if (this.isAttacking) {
+      c.fillStyle = "green";
+      c.fillRect(
+        this.attackBox.position.x,
+        this.attackBox.position.y,
+        this.attackBox.width,
+        this.attackBox.height
+      );
     }
-
-
-    // Update attack box coordinates
-    player.attackBox.position.x = player.position.x + this.attackBox.offset.x;
-    player.attackBox.position.y = player.position.y + this.attackBox.offset.y;
-
-    // Update player coordinates
-    player.position.x += this.velocity.x;
-    player.position.y += this.velocity.y;
-
-    // Update parry box coordinates
-    player.parryBox.position.x = player.position.x + this.parryBox.offset.x;
-    player.parryBox.position.y = player.position.y + this.parryBox.offset.y;
-
+  }
+  animateFrames() {
+    this.framesElapsed++;
     
+    if (this.framesElapsed % this.framesHold === 0) {
+        // For parry animation, stop at last frame
+        if (this.image === this.sprites.parry.image) {
+            if (this.framesCurrent < this.framesMax - 1) {
+                this.framesCurrent++;
+            }
+        } 
+      
+    }
+}
 
-     // gravity 
+  update() {
+    this.draw();
+    this.animateFrames();
+
+    // Update attack box position based on facing direction
+    if (this.facingRight) {
+      this.attackBox.position.x = this.position.x + this.attackBox.offset.x;
+    } else {
+      this.attackBox.position.x = this.position.x - this.attackBox.width + 25;
+    }
+    this.attackBox.position.y = this.position.y + this.attackBox.offset.y;
+
+    // Update parry box position
+    this.parryBox.position.x = this.position.x + this.parryBox.offset.x;
+    this.parryBox.position.y = this.position.y + this.parryBox.offset.y;
+
+    // Gravity
     if (this.position.y + this.height + this.velocity.y >= canvas.height - 50) {
       this.velocity.y = 0;
-      //this.position.y = 330
     } else {
       this.velocity.y += gravity;
     }
 
-    // Left and right boundaries
-    if (this.position.x + this.velocity.x <= 0) {
+    // Update position
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
+
+    // Horizontal boundaries
+    if (this.position.x <= 0) {
       this.position.x = 0;
-      this.velocity.x = 0;
-    } else if (this.position.x + this.width + this.velocity.x >= canvas.width) {
+    } else if (this.position.x + this.width >= canvas.width) {
       this.position.x = canvas.width - this.width;
-      this.velocity.x = 0;
-    } else {
-      this.position.x += this.velocity.x;
     }
 
-
-
-    // Top boundary
+    // Vertical boundaries
     if (this.position.y + this.velocity.y <= 0) {
       this.position.y = 0;
       this.velocity.y = -Math.abs(this.velocity.y);
-      player.velocity.y += 2;
+      this.velocity.y += 2;
     }
 
-    // Update player position for dodge
-    if (this.isDodging && player.velocity.x === 1) {
-      player.velocity.x = 0;  
-      } 
+    // Reset dodge velocity
+    if (this.isDodging && this.velocity.x === 1) {
+      this.velocity.x = 0;
     }
+  }
 
-   
-  //player instance methods 
-  attack(duration) {
+  attack(duration = 100) {
     this.isAttacking = true;
     setTimeout(() => {
       this.isAttacking = false;
@@ -253,43 +258,58 @@ class Player extends Sprite {
 
   parry() {
     this.isParry = true;
+    this.framesCurrent = 0;
+    this.switchSprite('parry');
+  }
+
+  endParry() {
+    this.isParry = false;
+    this.holdParryFrame = false;
+    this.isParryAnimationComplete = false;
+    this.switchSprite('idle');
   }
 
   dodge() {
     this.isDodging = true;
     setTimeout(() => {
       this.isDodging = false;
-    },500);
+    }, 500);
   }
 
-  offsetRight(direction) {
-    player.attackBox.offset.x = 0;
-
+  offsetRight() {
+    if (!this.facingRight) {
+      this.facingRight = true;
+    }
   }
 
-  offsetLeft(direction) {
-    player.attackBox.offset.x = -70;
+  offsetLeft() {
+    if (this.facingRight) {
+      this.facingRight = false;
+    }
   }
 
-  
-  
-  //sprite state management 
   switchSprite(sprite) {
+    // Override if parrying and animation isn't complete
+    if (this.image === this.sprites.parry.image && 
+        this.holdParryFrame && 
+        this.isParryAnimationComplete) {
+      return;
+    }
 
-       // overriding all other animations with the attack animation
-       if (
-        this.image === this.sprites.attack1.image &&
-        this.framesCurrent < this.sprites.attack1.framesMax - 1
-      )
-        return
+    // Override for attack animation
+    if (
+      this.image === this.sprites.attack1.image &&
+      this.framesCurrent < this.sprites.attack1.framesMax - 1
+    ) {
+      return;
+    }
 
-        
     switch (sprite) {
       case "idle":
         if (this.image !== this.sprites.idle.image) {
           this.image = this.sprites.idle.image;
           this.framesMax = this.sprites.idle.framesMax;
-          this.framesCurrent = 0
+          this.framesCurrent = 0;
         }
         break;
 
@@ -297,44 +317,47 @@ class Player extends Sprite {
         if (this.image !== this.sprites.run.image) {
           this.image = this.sprites.run.image;
           this.framesMax = this.sprites.run.framesMax;
-          this.framesCurrent = 0
+          this.framesCurrent = 0;
         }
         break;
 
       case "runNeg":
-          if (this.image !== this.sprites.runNeg.image) {
-            this.image = this.sprites.runNeg.image;
-            this.framesMax = this.sprites.runNeg.framesMax;
-            this.framesCurrent = 0
-          }
+        if (this.image !== this.sprites.runNeg.image) {
+          this.image = this.sprites.runNeg.image;
+          this.framesMax = this.sprites.runNeg.framesMax;
+          this.framesCurrent = 0;
+        }
         break;
 
       case "roll":
         if (this.image !== this.sprites.roll.image) {
-          this.framesMax = this.sprites.roll.framesMax;
           this.image = this.sprites.roll.image;
-          this.framesCurrent = 0
+          this.framesMax = this.sprites.roll.framesMax;
+          this.framesCurrent = 0;
         }
         break;
 
-        case "attack1":
-          if (this.image !== this.sprites.attack1.image) {
-            this.framesMax = this.sprites.attack1.framesMax;
-            this.image = this.sprites.attack1.image;
-            this.framesCurrent = 0
-          }
-          break;
-        case "parry":
-          if (this.image !== this.sprites.parry.image) {
-            this.framesMax = this.sprites.parry.framesMax;
-            this.image = this.sprites.parry.image;
-            this.framesCurrent = 0
-          }
-    }
-    
-  }
+      case "attack1":
+        if (this.image !== this.sprites.attack1.image) {
+          this.image = this.sprites.attack1.image;
+          this.framesMax = this.sprites.attack1.framesMax;
+          this.framesCurrent = 0;
+        }
+        break;
 
+      case "parry":
+        if (this.image !== this.sprites.parry.image) {
+          this.image = this.sprites.parry.image;
+          this.framesMax = this.sprites.parry.framesMax;
+          this.framesCurrent = 6;
+          //this.isParryAnimationComplete = false;
+        }
+        break;
+    }
+  }
 }
+
+
 
 
 
@@ -529,6 +552,8 @@ class Enemy extends Sprite {
 
 
 
+
+//level assembler arhictecture 
 class LevelAssembler{
  constructor({
   playerObjectList,
@@ -545,9 +570,11 @@ class LevelAssembler{
   this.levelAssetList = levelAssetList
 }
 
+
+
 //methods
 initBaddies(){
-//some code to somehow load all player objects in
+//some code to somehow load all player objects ine
 }
 
 initPlayer(){
@@ -559,7 +586,7 @@ initAssets(){
 }
 
 initLogic(){
-//some code
+//some codee
 }
 
 }
